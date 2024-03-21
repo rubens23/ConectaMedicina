@@ -6,7 +6,7 @@ interface UserDataSource {
 
     suspend fun getUserByUserId(userId: String): User?
     suspend fun updateUserNotificationToken(fcmToken: String, username: String)
-    suspend fun updateUserProfilePicture(storageDto: StorageDto)
+    suspend fun updateUserProfilePicture(storageDto: StorageDto, updatedProfileImage: (updated: Boolean)->Unit)
     suspend fun getUserProfilePictureByUsername(userUsername: String): String
 
 

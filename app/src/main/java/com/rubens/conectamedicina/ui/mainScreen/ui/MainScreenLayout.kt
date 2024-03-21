@@ -13,10 +13,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.unit.dp
 import com.rubens.conectamedicina.CircularImageWithBackgroundUserProfileImage
 import com.rubens.conectamedicina.HorizontalListItem
@@ -35,7 +38,7 @@ import com.rubens.conectamedicina.shimmertutorial.ShimmerNotificationWithBadge
 import com.rubens.conectamedicina.shimmertutorial.ShimmerSearchIcon
 import com.rubens.conectamedicina.shimmertutorial.ShimmerUserWelcomingText
 import com.rubens.conectamedicina.ui.mainScreen.viewModel.MainScreenViewModel
-
+import java.util.Locale
 
 
 @Composable
@@ -43,7 +46,8 @@ fun MainScreenLayout(
     viewModel: MainScreenViewModel,
     onDoctorChosen: (String, String, String) -> Unit,
     goToSearchScreen: () ->Unit,
-    goToNotificationScreen: ()-> Unit
+    goToNotificationScreen: ()-> Unit,
+    snackbarHostState: SnackbarHostState
 ) {
 
 
@@ -52,6 +56,14 @@ fun MainScreenLayout(
     val doctors by remember { viewModel.doctors }
     val loadingDoctors by remember { viewModel.doctorsLoading }
     val chosenMedicalCategory by remember { viewModel.chosenMedicalCategory }
+    val resultSaveNewProfileImage by remember { viewModel.resultSaveNewProfileImage }
+
+    LaunchedEffect(Unit){
+        if(resultSaveNewProfileImage != ""){
+            snackbarHostState.showSnackbar(message = resultSaveNewProfileImage, actionLabel = "Ok")
+        }
+    }
+
 
 
 
@@ -68,7 +80,8 @@ fun MainScreenLayout(
                     contentAfterLoading = {
                         CircularImageWithBackgroundUserProfileImage(
                             userUsername = it.username,
-                            userProfilePicture = it.profilePicture
+                            userProfilePicture = it.profilePicture,
+                            viewModel = viewModel
                         )
                     },
                 )
@@ -76,7 +89,11 @@ fun MainScreenLayout(
                     isLoading = loadingUser,
                     contentAfterLoading = {
                         UserWelcomingText(
-                            it.username.substringBefore("_").substringBefore("@") ?: "",
+                            userName = it.name.replaceFirstChar {
+                                if (it.isLowerCase()) it.titlecase(
+                                    Locale.getDefault()
+                                ) else it.toString()
+                            },
                             modifier = Modifier.padding(top = 8.dp, start = 12.dp)
                         )
                     }

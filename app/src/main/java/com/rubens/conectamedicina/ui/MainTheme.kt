@@ -2,8 +2,12 @@ package com.rubens.conectamedicina.ui
 
 import android.net.Uri
 import android.util.Log
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -14,7 +18,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
@@ -51,6 +57,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainTheme(viewModel: MainViewModel = hiltViewModel(),
               modifier: Modifier = Modifier) {
+
     val navController = rememberNavController()
     var showHomeScreen by remember { mutableStateOf(false) }
     var showSignUpScreen by remember { mutableStateOf(false) }
@@ -59,6 +66,13 @@ fun MainTheme(viewModel: MainViewModel = hiltViewModel(),
     var userSecret by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember{SnackbarHostState()}
+    var isChatScreenOpen by remember { mutableStateOf(false) }
+    var isDoctorDetailScreenOpen by remember { mutableStateOf(false) }
+    var isDoctorFeedbackScreenOpen by remember { mutableStateOf(false) }
+    var isNewAppointmentScreenOpen by remember { mutableStateOf(false) }
+    var isSignUpScreenOpen by remember { mutableStateOf(true) }
+    var isSignInScreenOpen by remember { mutableStateOf(false) }
+
 
 
 
@@ -91,11 +105,27 @@ fun MainTheme(viewModel: MainViewModel = hiltViewModel(),
         }
     }
 
+    val navigationBarHeight = WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
+
+    Log.d("bottomNavOnManualLogin", "o valor de userUsername é $userUsername")
+
+
+
     Scaffold(
         modifier = modifier,
-        snackbarHost = {SnackbarHost(hostState = snackbarHostState)},
-        contentWindowInsets = WindowInsets(0.dp),
-        bottomBar = { if(userUsername != "") BottomNavigation(navController,
+        snackbarHost = {SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.padding(bottom = navigationBarHeight))},
+        bottomBar = { if(
+             !isChatScreenOpen
+            && !isDoctorDetailScreenOpen
+            && !isDoctorFeedbackScreenOpen
+            && !isNewAppointmentScreenOpen
+            && !isSignInScreenOpen
+             && !isSignUpScreenOpen
+
+
+        ) BottomNavigation(navController,
             goToNotificationsScreen = {
                 navController.navigate(BottomNavItem.Notification.screenRoute){
                     popUpTo(BottomNavItem.Home.screenRoute){
@@ -130,7 +160,8 @@ fun MainTheme(viewModel: MainViewModel = hiltViewModel(),
                     launchSingleTop = true
                     restoreState = true
                 }
-            }) else EmptyBottomNavigation() }
+            }) else EmptyBottomNavigation() },
+        contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp)
     ) { innerPadding ->
         NavHost(
             navController = navController,
@@ -140,55 +171,31 @@ fun MainTheme(viewModel: MainViewModel = hiltViewModel(),
 
 
 
-            composable(route = "splash") {
-                SplashScreen()
-            }
 
-//            composable(route = "${BottomNavItem.DoctorDetails.screenRoute}/{doctorEmail}",
-//                arguments = listOf(
-//                    navArgument("doctorEmail"){type = NavType.StringType}
-//                )
-//            ){backStackEntry->
-//                val doctorUsername = backStackEntry.arguments!!.getString("doctorEmail")!!
-//
-//
-//
-//
-////                DoctorsDetailScreenLayout(
-////                    doctorUsername = "",
-////                    userUsername = "",
-////                    goToChatScreen = { doctorUserName, userUsername->
-////                        navController.navigate("${BottomNavItem.ClientDoctorChat.screenRoute}/${doctorUserName}/${userUsername}")
-////
-////                    },
-////                    goToReviewScreen = { doctorUserName->
-////                        navController.navigate("${BottomNavItem.ReviewsAndFeedbacks.screenRoute}/${doctorUserName}")
-////
-////                    },
-////                    goToNewAppointmentScreen = { doctorName, doctorSpecialty, clientName, clientId, doctorUserName, clientPhotoUrl ->
-////                        navController.navigate("${BottomNavItem.NewAppointment.screenRoute}/${doctorName}/${doctorSpecialty}/${clientName}/${clientId}/${doctorUserName}/${clientPhotoUrl}")
-////
-////                    },
-////                    goBackToHomeScreen = {
-////                        navController.popBackStack(route = BottomNavItem.Home.screenRoute,
-////                            inclusive = false,
-////                            saveState = false)
-////                    },
-////                    viewModel = hiltViewModel<DoctorDetailViewModel>(),
-////                    snackbarHostState = snackbarHostState,
-////                    userPhotoUrl = ""
-////                )
-//            }
 
             composable(route = BottomNavItem.Home.screenRoute) {
 
                 val mainViewModel = hiltViewModel<MainScreenViewModel>()
 
+                isChatScreenOpen = false
+                isDoctorDetailScreenOpen = false
+                isDoctorFeedbackScreenOpen = false
+                isNewAppointmentScreenOpen = false
+                isSignInScreenOpen = false
+                isSignUpScreenOpen = false
+
+
+
                 MainScreenLayout(
                     viewModel = mainViewModel,
                     onDoctorChosen = {doctorUsername: String, userUsername, userPhoto ->
 
-                        navController.navigate("${BottomNavItem.DoctorDetails.screenRoute}/$doctorUsername/$userUsername/${Uri.encode(userPhoto)}"){
+                        val encodedUserPhoto = if(userPhoto != "")Uri.encode(userPhoto) else "userHasNoPhoto"
+
+                        Log.d("solvingSpace8", "userPhoto here in home route declaration = $encodedUserPhoto")
+
+
+                        navController.navigate("${BottomNavItem.DoctorDetails.screenRoute}/$doctorUsername/$userUsername/$encodedUserPhoto"){
 
                         restoreState = true
                         }
@@ -210,33 +217,79 @@ fun MainTheme(viewModel: MainViewModel = hiltViewModel(),
                             }
                             launchSingleTop = true
                         }
-                    })
+                    },
+                    snackbarHostState = snackbarHostState)
             }
             composable(route = BottomNavItem.SearchScreen.screenRoute
             ) {
 
                 val searchViewModel = hiltViewModel<SearchScreenViewModel>()
 
+                isChatScreenOpen = false
+                isDoctorDetailScreenOpen = false
+                isDoctorFeedbackScreenOpen = false
+                isNewAppointmentScreenOpen = false
+                isSignInScreenOpen = false
+                isSignUpScreenOpen = false
+
+
+
+
+
                 SearchScreenLayout(
                     viewModel = searchViewModel,
                     snackbarHostState = snackbarHostState)
             }
-            composable(route = BottomNavItem.Notification.screenRoute) { NotificationScreenLayout(
+            composable(route = BottomNavItem.Notification.screenRoute) {
+                isChatScreenOpen = false
+                isDoctorDetailScreenOpen = false
+                isDoctorFeedbackScreenOpen = false
+                isNewAppointmentScreenOpen = false
+                isSignInScreenOpen = false
+                isSignUpScreenOpen = false
+
+
+
+
+                NotificationScreenLayout(
                 viewModel = hiltViewModel<NotificationViewModel>(),
                 snackbarHostState = snackbarHostState
             ) }
-            composable(route = "${BottomNavItem.ReviewsAndFeedbacks.screenRoute}/{doctorUsername}",
+            composable(route = "${BottomNavItem.ReviewsAndFeedbacks.screenRoute}/{doctorUsername}/{userPhoto}",
             arguments = listOf(
-                navArgument("doctorUsername"){type = NavType.StringType}
+                navArgument("doctorUsername"){type = NavType.StringType},
+                navArgument("userPhoto"){type = NavType.StringType}
             )
             ) {
                 backStackEntry->
                 Log.d("MainTheme", "valor do userName $userUsername")
                 val doctorUsername = backStackEntry.arguments!!.getString("doctorUsername")!!
+                val userPhotoUrl = backStackEntry.arguments!!.getString("userPhoto")!!
+
+                val encodedUserPhoto = if(userPhotoUrl != "")Uri.encode(userPhotoUrl) else "userHasNoPhoto"
+
+
+                isChatScreenOpen = false
+                isDoctorDetailScreenOpen = false
+                isDoctorFeedbackScreenOpen = true
+                isNewAppointmentScreenOpen = false
+                isSignInScreenOpen = false
+                isSignUpScreenOpen = false
+
+
+
+
                 ReviewAndFeedbackLayout(doctorUsername = doctorUsername,
                     viewModel = hiltViewModel<ReviewAndFeedbacksViewModel>(),
                     snackbarHostState = snackbarHostState,
-                    userName = name
+                    userName = name,
+                    goBackToDoctorDetails = {
+                        Log.d("solvingSpace8", "userPhoto here in review and feedbacks route declaration = $encodedUserPhoto")
+
+                        navController.navigate(route = "${BottomNavItem.DoctorDetails.screenRoute}/$doctorUsername/$userUsername/$encodedUserPhoto")
+
+                    },
+                    userPhoto = encodedUserPhoto
                 )
             }
             composable(route = BottomNavItem.Appointments.screenRoute) { AppointmentsListLayout(
@@ -262,6 +315,16 @@ fun MainTheme(viewModel: MainViewModel = hiltViewModel(),
                 val doctorId = backStackEntry.arguments!!.getString("doctorId")!!
                 val userPhoto = backStackEntry.arguments!!.getString("userPhotoUrl")!!
 
+                isChatScreenOpen = false
+                isDoctorDetailScreenOpen = false
+                isDoctorFeedbackScreenOpen = false
+                isNewAppointmentScreenOpen = true
+                isSignInScreenOpen = false
+                isSignUpScreenOpen = false
+
+
+
+
                 NewAppointmentLayout(
                     doctorName = doctorName,
                     doctorService = doctorService,
@@ -270,11 +333,27 @@ fun MainTheme(viewModel: MainViewModel = hiltViewModel(),
                     doctorId = doctorId,
                     viewModel = hiltViewModel<AppointmentsViewModel>(),
                     snackbarHostState = snackbarHostState,
-                    clientPhotoUrl = userPhoto
+                    clientPhotoUrl = userPhoto?:"",
+                    goBackToDoctorDetails = {
+
+                        val encodedUserPhoto = if(userPhoto != "")Uri.encode(userPhoto) else "userHasNoPhoto"
+
+                        Log.d("solvingSpace8", "userPhoto here in appointments route declaration = $encodedUserPhoto")
+
+
+
+                        navController.navigate(route = "${BottomNavItem.DoctorDetails.screenRoute}/$doctorId/$userUsername/$encodedUserPhoto")
+
+                    }
 
                 )
             }
-            composable(route = BottomNavItem.SignUp.screenRoute) { SignUpScreen(
+            composable(route = BottomNavItem.SignUp.screenRoute) {
+
+                isSignInScreenOpen = false
+                isSignUpScreenOpen = true
+
+                SignUpScreen(
                 viewModel = hiltViewModel<AuthenticationViewModel>(),
                 snackbarHostState = snackbarHostState,
                 goToLoginScreen = {
@@ -286,7 +365,13 @@ fun MainTheme(viewModel: MainViewModel = hiltViewModel(),
                     }
                 }
             ) }
-            composable(route = BottomNavItem.SignIn.screenRoute) { SignInScreen(changeDestinationAfterLogin = {
+            composable(route = BottomNavItem.SignIn.screenRoute) {
+                isSignInScreenOpen = true
+                isSignUpScreenOpen = false
+
+
+                SignInScreen(
+                changeDestinationAfterLogin = {
                 navController.popBackStack()
                 navController.navigate(BottomNavItem.Home.screenRoute){
                     launchSingleTop = true
@@ -316,26 +401,55 @@ fun MainTheme(viewModel: MainViewModel = hiltViewModel(),
                         type = NavType.StringType
                     }
                 )) { backStackEntry ->
+
+
+
+
+
                 val doctorUsername = backStackEntry.arguments?.getString("doctorUsername")
                 val userUserName = backStackEntry.arguments?.getString("userUsername")
-                val userPhoto = Uri.decode(backStackEntry.arguments?.getString("userPhotoUrl"))
+                val userPhoto = backStackEntry.arguments!!.getString("userPhotoUrl")!!
+
+
+
+                Log.d("solvingSpace8", "userPhoto here in doctorDetails route declaration = $userPhoto")
+
 
 
 
                 if (!doctorUsername.isNullOrEmpty() && !userUserName.isNullOrEmpty()) {
+                    isChatScreenOpen = false
+                    isDoctorDetailScreenOpen = true
+                    isDoctorFeedbackScreenOpen = false
+                    isDoctorFeedbackScreenOpen = false
+                    isNewAppointmentScreenOpen = false
+                    isSignInScreenOpen = false
+                    isSignUpScreenOpen = false
+
+
+
+
                     DoctorsDetailScreenLayout(
                         doctorUsername = doctorUsername,
                         userUsername = userUserName,
-                        goToChatScreen = { doctorUserName, userUsername->
-                            navController.navigate("${BottomNavItem.ClientDoctorChat.screenRoute}/${doctorUserName}/${userUsername}")
+                        goToChatScreen = { doctorUserName, userUsername, userPhotoReceived, docPhoto, docName->
+                            val userPicUrl = if(userPhotoReceived != "") Uri.encode(userPhotoReceived) else "userHasNoPhoto"
+                            val encodedDoctorPhotoUrl = if(docPhoto != "")Uri.encode(docPhoto) else "docHasNoPhoto"
+
+
+
+                            navController.navigate("${BottomNavItem.ClientDoctorChat.screenRoute}/${doctorUserName}/${userUsername}/$userPicUrl/$encodedDoctorPhotoUrl/${docName}")
 
                         },
                         goToReviewScreen = { doctorUserName->
-                            navController.navigate("${BottomNavItem.ReviewsAndFeedbacks.screenRoute}/${doctorUserName}")
+                            val encodedUserPhoto = if(userPhoto != "")Uri.encode(userPhoto) else "userHasNoPhoto"
+
+                            navController.navigate("${BottomNavItem.ReviewsAndFeedbacks.screenRoute}/${doctorUserName}/${encodedUserPhoto}")
 
                         },
                         goToNewAppointmentScreen = { doctorName, doctorSpecialty, clientName, clientId, doctorUserName, clientPhotoUrl ->
-                            navController.navigate("${BottomNavItem.NewAppointment.screenRoute}/${doctorName}/${doctorSpecialty}/${clientName}/${clientId}/${doctorUserName}/${clientPhotoUrl}")
+                            val clientPhotoEncoded = if(clientPhotoUrl != "")Uri.encode(clientPhotoUrl)else clientPhotoUrl
+                            navController.navigate("${BottomNavItem.NewAppointment.screenRoute}/${doctorName}/${doctorSpecialty}/${clientName}/${clientId}/${doctorUserName}/${clientPhotoEncoded}")
 
                         },
                         goBackToHomeScreen = {
@@ -354,22 +468,79 @@ fun MainTheme(viewModel: MainViewModel = hiltViewModel(),
             }
 
             composable(
-                "${BottomNavItem.ClientDoctorChat.screenRoute}/{doctorUsername}/{userUsername}",
+                "${BottomNavItem.ClientDoctorChat.screenRoute}/{doctorUsername}/{userUsername}/{userPhotoUrl}/{doctorPhotoUrl}/{doctorName}",
                 arguments = listOf(navArgument("doctorUsername") {
                     type = NavType.StringType
                 },
                     navArgument("userUsername") {
                         type = NavType.StringType
+                    },
+                    navArgument("userPhotoUrl") {
+                        type = NavType.StringType
+                    },
+                    navArgument("doctorPhotoUrl") {
+                        type = NavType.StringType
+                    },
+                    navArgument("doctorName"){
+                        type = NavType.StringType
                     })
             ) { backStackEntry ->
                 val doctorUsername = backStackEntry.arguments?.getString("doctorUsername")
                 val userUserName = backStackEntry.arguments?.getString("userUsername")
+                val userPhotoUrl = backStackEntry.arguments!!.getString("userPhotoUrl")!!
+                val docPhotoUrl = backStackEntry.arguments!!.getString("doctorPhotoUrl")!!
+                val docName = backStackEntry.arguments?.getString("doctorName")
+
+
+
+
+
+
                 if (!doctorUsername.isNullOrEmpty() && !userUserName.isNullOrEmpty()) {
+                    isChatScreenOpen = true
+                    isDoctorDetailScreenOpen = false
+                    isDoctorFeedbackScreenOpen = false
+                    isNewAppointmentScreenOpen = false
+                    isSignInScreenOpen = false
+                    isSignUpScreenOpen = false
+
+
+
+
+                        Log.d("solvingSpace6", "valor de userPhotoUrl $userPhotoUrl")
+
+
+
+
                     ClientDoctorChatScreenLayout(
                         doctorUsername = doctorUsername,
                         userUsername = userUserName,
                         viewModel = hiltViewModel<ChatViewModel>(),
-                        snackbarHostState = snackbarHostState
+                        snackbarHostState = snackbarHostState,
+                        userName = name,
+                        goBackToDoctorDetails = {
+
+
+                            val encodedUserPhoto = if(userPhotoUrl != "")Uri.encode(userPhotoUrl) else "userHasNoPhoto"
+
+//                            navController.popBackStack(route = "${BottomNavItem.DoctorDetails.screenRoute}/$doctorUsername/$userUsername/$encodedUserPhoto",
+//                                inclusive = false,
+//                                saveState = false)
+
+
+                            navController.popBackStack()
+
+                            Log.d("solvingSpace8", "userPhoto here in clientDoctorChat route declaration = $encodedUserPhoto")
+
+
+                            navController.navigate(route = "${BottomNavItem.DoctorDetails.screenRoute}/$doctorUsername/$userUsername/$encodedUserPhoto")
+
+
+                        },
+                        doctorPhotoUrl = docPhotoUrl,
+                        doctorName = docName?:"",
+                        userPhotoUrl = userPhotoUrl?:""
+
                     )
 
                 }
@@ -380,3 +551,4 @@ fun MainTheme(viewModel: MainViewModel = hiltViewModel(),
 
     }
 }
+

@@ -51,7 +51,6 @@ class MainViewModel @Inject constructor(
     private val doctorDataSource: DoctorDataSource,
     private val userDataSource: UserDataSource,
     private val sharedPreferences: SharedPreferences,
-    private val fileStorage: FileStorage,
 ): ViewModel(){
 
     var doctorsList: List<Doctor> = emptyList()
@@ -187,26 +186,7 @@ class MainViewModel @Inject constructor(
 
 
 
-    fun saveProfileImageToStorage(uri: Uri?, userUsername: String) {
-        if(uri != null){
-            viewModelScope.launch {
-                fileStorage.uploadImageToStorage(
-                    uri,
-                    userUsername
-                ){ imgLink->
-                    Log.d(TAG, "imgLink = $imgLink")
-                    viewModelScope.launch {
-                        userDataSource.updateUserProfilePicture(StorageDto(
-                            imgLink = imgLink,
-                            userUsername = userUsername
-                        ))
-                    }
 
-                }
-            }
-        }
-
-    }
 
 
 

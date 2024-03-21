@@ -2,6 +2,8 @@ package com.rubens.conectamedicina.ui.navigation
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -22,7 +24,8 @@ import com.rubens.conectamedicina.ui.utils.mainBlue
 
 @Composable
 fun EmptyBottomNavigation(){
-    NavigationBar {  }
+    NavigationBar(containerColor = Color.Cyan,
+        modifier = Modifier.height(0.dp)) {  }
 }
 
 @Composable

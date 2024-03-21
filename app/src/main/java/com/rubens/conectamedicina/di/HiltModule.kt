@@ -54,7 +54,7 @@ object HiltModule {
     @Singleton
     fun providesClientAuthApi(): ClientAuthApi {
         return Retrofit.Builder()
-            .baseUrl("http://192.168.0.5:8081/")
+            .baseUrl("http://192.168.0.2:8081/")
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create()
@@ -66,7 +66,7 @@ object HiltModule {
     @Singleton
     fun providesDoctorAuthApi(): DoctorAuthApi {
         return Retrofit.Builder()
-            .baseUrl("http://192.168.0.5:8083/")
+            .baseUrl("http://192.168.0.2:8083/")
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create()
@@ -76,7 +76,7 @@ object HiltModule {
     @Singleton
     fun providesDoctorsApi(): ApiDoctors{
         return Retrofit.Builder()
-            .baseUrl("http://192.168.0.5:8081/")
+            .baseUrl("http://192.168.0.2:8081/")
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create()
@@ -87,7 +87,7 @@ object HiltModule {
     @Singleton
     fun providesAppointmentsApi(): ApiAppointments{
         return Retrofit.Builder()
-            .baseUrl("http://192.168.0.5:8081/")
+            .baseUrl("http://192.168.0.2:8081/")
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create()
@@ -98,7 +98,7 @@ object HiltModule {
     @Singleton
     fun providesUserApi(): ApiUsers{
         return Retrofit.Builder()
-            .baseUrl("http://192.168.0.5:8081/")
+            .baseUrl("http://192.168.0.2:8081/")
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create()
@@ -108,7 +108,7 @@ object HiltModule {
     @Singleton
     fun providesNotificationApi(): ApiNotifications{
         return Retrofit.Builder()
-            .baseUrl("http://192.168.0.5:8081/")
+            .baseUrl("http://192.168.0.2:8081/")
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create()
@@ -118,7 +118,7 @@ object HiltModule {
     @Singleton
     fun providesChatApi(): ApiChat{
         return Retrofit.Builder()
-            .baseUrl("http://192.168.0.5:8081/")
+            .baseUrl("http://192.168.0.2:8081/")
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create()
@@ -128,7 +128,7 @@ object HiltModule {
     @Singleton
     fun providesReviewApi(): ApiReviews{
         return Retrofit.Builder()
-            .baseUrl("http://192.168.0.5:8081/")
+            .baseUrl("http://192.168.0.2:8081/")
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create()

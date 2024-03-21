@@ -67,7 +67,6 @@ fun DoctorHeader(modifier: Modifier = Modifier,
                  @DrawableRes doctorImage: Int, doctor: Doctor?,
                  goBackToHomeScreen: ()->Unit){
     Box(modifier = modifier.fillMaxWidth()
-        //.systemBarsPadding()
     ){
         Image(modifier = Modifier.height(200.dp)
             .fillMaxWidth(),
@@ -118,13 +117,14 @@ fun DoctorHeader(modifier: Modifier = Modifier,
 @Composable
 fun DoctorDetailsBody(
     modifier: Modifier = Modifier,
-    goToChatScreen: (String, String) -> Unit,
+    goToChatScreen: () -> Unit,
     goToReviewScreen: (String) -> Unit,
     goToNewAppointment: (String, String, String, String, String, String) -> Unit,
     doctor: Doctor,
     userUsername: String,
     viewModel: DoctorDetailViewModel,
-    userPhoto: String
+    userPhoto: String,
+    doctorPhoto: String
 ){
 
     val appointmentsList = remember{ mutableStateOf<List<Appointment>?>(null) }
@@ -166,7 +166,6 @@ fun DoctorDetailsBody(
     Column(
         modifier = modifier
             .clip(shape = RoundedCornerShape(15.dp, 15.dp, 0.dp, 0.dp))
-            .background(Color.White)
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
 
@@ -174,11 +173,11 @@ fun DoctorDetailsBody(
     ){
         Row(modifier = Modifier
             .fillMaxWidth()
-            .padding(end = 40.dp)){
+            .padding(horizontal = 16.dp)){
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 16.dp, top = 16.dp),
+                    .padding(top = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
 
@@ -205,9 +204,9 @@ fun DoctorDetailsBody(
                     color = Color(android.graphics.Color.parseColor("#666666")))
                 }
             }
-            Row(modifier = Modifier.padding(top = 45.dp, start = 16.dp)){
+            Row(modifier = Modifier.padding(top = 45.dp)){
                 CircularChatButton{
-                    goToChatScreen(doctor.username, userUsername)
+                    goToChatScreen()
                 }
                 CircularReviewButton{
                     goToReviewScreen(doctor.username)
@@ -286,6 +285,8 @@ fun DoctorDetailsBody(
             }
 
 
+        }else{
+            Text("-", modifier = Modifier.padding(start = 16.dp, bottom = 10.dp))
         }
 
 //        ReviewsList(modifier = Modifier.padding(top = 8.dp),reviewsList = listOf(

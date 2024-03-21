@@ -1,5 +1,7 @@
 package com.rubens.conectamedicina.ui.mainScreen.viewModel
 
+import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.intl.Locale
@@ -11,6 +13,8 @@ import com.rubens.conectamedicina.data.auth.di.UserAuthRepositoryQualifier
 import com.rubens.conectamedicina.data.doctors.Doctor
 import com.rubens.conectamedicina.data.doctors.DoctorDataSource
 import com.rubens.conectamedicina.data.notification.ApiService
+import com.rubens.conectamedicina.data.storage.FileStorage
+import com.rubens.conectamedicina.data.storage.StorageDto
 import com.rubens.conectamedicina.data.user.User
 import com.rubens.conectamedicina.data.user.UserDataSource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,9 +28,13 @@ class MainScreenViewModel @Inject constructor(
     private val userDataSource: UserDataSource,
     private val doctorDataSource: DoctorDataSource,
     private val pushNotificationsService: ApiService,
+    private val fileStorage: FileStorage,
+
 
 
     ): ViewModel() {
+
+        private val tag = "MainScreenViewModel"
 
 
 
@@ -47,6 +55,9 @@ class MainScreenViewModel @Inject constructor(
 
     private var _doctorsLoading = mutableStateOf(true)
     val doctorsLoading: State<Boolean> get() = _doctorsLoading
+
+    private val _resultSaveNewProfileImage = mutableStateOf("")
+    val resultSaveNewProfileImage = _resultSaveNewProfileImage
 
 
     init {
@@ -119,6 +130,39 @@ class MainScreenViewModel @Inject constructor(
 
         }
 
+
+    }
+
+    fun saveProfileImageToStorage(uri: Uri?, userUsername: String) {
+        if(uri != null){
+            viewModelScope.launch {
+                fileStorage.uploadImageToStorage(
+                    uri,
+                    userUsername
+                ){ imgLink->
+                    Log.d(tag, "imgLink = $imgLink")
+                    viewModelScope.launch {
+                        userDataSource.updateUserProfilePicture(
+                            StorageDto(
+                            imgLink = imgLink,
+                            userUsername = userUsername
+                        )
+                        ) { updated ->
+                            if (updated) {
+                                Log.d("solvingProfPicture", "vou alterar o estado do user")
+                                _user.value.let { currentUser ->
+                                    _user.value = currentUser!!.copy(profilePicture = imgLink)
+                                }
+                            }else{
+                                _resultSaveNewProfileImage.value = "There was an error saving new profile image"
+
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
 
     }
 

@@ -1,15 +1,19 @@
 package com.rubens.conectamedicina.ui.appointmentScreen.ui
 
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -37,11 +41,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.rubens.conectamedicina.R
 import com.rubens.conectamedicina.data.appointments.Appointment
 import com.rubens.conectamedicina.shimmertutorial.ShimmerAppointmentList
 import com.rubens.conectamedicina.ui.appointmentScreen.viewModel.AppointmentsViewModel
@@ -84,6 +91,23 @@ fun AppointmentsListLayout(viewModel: AppointmentsViewModel,
 
 
         if(appointmentList.value != null){
+            if(appointmentList.value!!.isEmpty()){
+                Column(modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center) {
+                    Image(
+                        painter = painterResource(R.drawable.no_appointments),
+                        contentDescription = null,
+                        modifier = Modifier.size(68.dp).fillMaxWidth().align(Alignment.CenterHorizontally)
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Text("You have no appointments!", modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp)
+                }
+
+            }
+
+
             ShimmerAppointmentList(
                 isLoading = appointmentsAreLoading,
                 contentAfterLoading = {LazyColumn {

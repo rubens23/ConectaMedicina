@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ChatMessageMapDecoder(
     val type: String,
-    val chatMessage: ChatMessage
+    val chatMessage: ChatMessage,
+    val userName: String
 )
 

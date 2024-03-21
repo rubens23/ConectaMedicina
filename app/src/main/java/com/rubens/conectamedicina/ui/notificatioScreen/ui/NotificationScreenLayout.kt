@@ -4,10 +4,13 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -30,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -93,6 +97,23 @@ fun NotificationScreenLayout(viewModel: NotificationViewModel,
         )
 
         if (notifications.value != null) {
+            Log.d("monNotifications", "notificacoes NÃO é nula")
+            if(notifications.value!!.notifications.isEmpty()){
+                Column(modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center) {
+                    Image(
+                        painter = painterResource(R.drawable.no_notifications),
+                        contentDescription = null,
+                        modifier = Modifier.size(68.dp).fillMaxWidth().align(Alignment.CenterHorizontally)
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Text("You have no notifications!", modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp)
+                }
+
+            }
+
 
             ShimmerNotificationItem(
                 isLoading = loadingNotifications,
@@ -108,10 +129,13 @@ fun NotificationScreenLayout(viewModel: NotificationViewModel,
 
 
         }else{
+            Log.d("monNotifications", "notificacoes é nula")
 
             ShimmerNotificationItem(
                 isLoading = loadingNotifications,
                 contentAfterLoading = {
+
+
 
                 }
             )

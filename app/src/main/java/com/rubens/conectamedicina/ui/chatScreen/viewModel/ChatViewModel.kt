@@ -7,19 +7,14 @@ import androidx.lifecycle.viewModelScope
 import com.rubens.conectamedicina.data.chat.ChatDataSource
 import com.rubens.conectamedicina.data.chat.ChatKtorClient
 import com.rubens.conectamedicina.data.chat.ChatMessage
-import com.rubens.conectamedicina.data.models.DoctorClientCommunication
 import com.rubens.conectamedicina.data.notification.ApiService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.android.Android
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.logging.Logging
 import io.ktor.client.features.websocket.WebSockets
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.Date
@@ -39,41 +34,63 @@ class ChatViewModel @Inject constructor(
     )
 
 
-    private val messagesChannel = Channel<MutableList<ChatMessage>>()
-    private val notificationsChannel = Channel<ChatMessage>()
-    val messagesResult = messagesChannel.receiveAsFlow()
-    val notificationsResult = notificationsChannel.receiveAsFlow()
+    private var initiatedChat = false
+    private var gotMessagesFromChatDatasource = false
 
     private val _chatError = mutableStateOf("")
     val chatError get() = _chatError
 
-
-
+    //private val _messagesListState = mutableStateListOf<ChatMessage>()
+    private val _messagesListState = MutableStateFlow<MutableList<ChatMessage>>(mutableListOf())
+    val messagesListState get() = _messagesListState.asStateFlow()
 
     init {
 
+        startCollectiongChatErrors()
+        startCollectingNewMessages()
+
+    }
+
+
+
+
+    private fun startCollectiongChatErrors() {
         viewModelScope.launch {
             client.chatError.collect{
                 _chatError.value = it
 
             }
         }
+    }
+
+    private fun startCollectingNewMessages() {
 
         viewModelScope.launch {
-            client.messageFlow.collect{
-                messagesChannel.send(mutableListOf(it))
-                notificationsChannel.send(it)
 
-            }
+                client.messageFlow.collect{
+
+                    Log.d("solvingListBug", "lista de mensagens antes de coletar uma nova mensagem ${messagesListState.value}")
+
+                    _messagesListState.value = messagesListState.value.toMutableList().apply {
+                        add(it)
+                    }
+
+                    Log.d("solvingListBug", "lista de mensagens DEPOIS de coletar uma nova mensagem ${messagesListState.value}")
+
+
+
+
+                }
+
+
         }
 
     }
 
 
-
-    fun sendNewChatMessageToServer(chatMessage: ChatMessage) {
+    fun sendNewChatMessageToServer(chatMessage: ChatMessage, userName: String) {
         viewModelScope.launch {
-            client.sendMessage(chatMessage)
+            client.sendMessage(chatMessage, userName)
 
         }
 
@@ -81,17 +98,43 @@ class ChatViewModel @Inject constructor(
 
     fun initChatRoom(idDoutor: String, idUser: String){
         viewModelScope.launch {
-            client.initChatSession(idDoutor,idUser)
+            if(!initiatedChat){
+                client.initChatSession(idDoutor,idUser)
+                initiatedChat = true
+
+            }
+
+
 
         }
     }
 
     fun getMessagesIfTheyExist(idDoutor: String, idCliente: String) {
         viewModelScope.launch {
-            val chatMessages = chatDataSource.getChatMessages(idDoutor, idCliente)
-            if (chatMessages != null){
-                messagesChannel.send(chatMessages.messages)
+
+            //if there are any unwanted recomposes this wont make additional calls to the chatDataSource
+            //the call to the chatDataSource should be made only once in the lifetime of the viewModel
+            if(!gotMessagesFromChatDatasource){
+                val chatMessages = chatDataSource.getChatMessages(idDoutor, idCliente)
+                if (chatMessages != null){
+
+                    _messagesListState.value = messagesListState.value.toMutableList().apply {
+                        addAll(chatMessages.messages)
+                    }
+                    Log.d("solvingListBug", "eu peguei mensagens do database de chat. Lista depois do addAll: $messagesListState")
+
+
+                    //_messagesListState.addAll(chatMessages.messages)
+                    gotMessagesFromChatDatasource = true
+
+                }else{
+                    //even if there wasnt any messages, it tried to took the messages, so there shouldnt be anymore calls do the database
+                    Log.d("solvingListBug", "to no else do gotMessagesFromChatDataSource: $messagesListState")
+
+                    gotMessagesFromChatDatasource = true
+                }
             }
+
 
         }
 
@@ -104,6 +147,8 @@ class ChatViewModel @Inject constructor(
         val date = Date(timestamp)
         return dateFormat.format(date)
     }
+
+
 
 
 }

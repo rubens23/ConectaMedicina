@@ -37,7 +37,7 @@ class ChatKtorClient(
     suspend fun initChatSession(doctorId: String, userId: String){
         try{
             session = client.webSocketSession {
-                url("ws://192.168.0.5:8085/chatTest")
+                url("ws://192.168.0.2:8085/chatTest")
             }
             sendInitialRoomIds(userId)
             receiveMessages()
@@ -53,7 +53,7 @@ class ChatKtorClient(
 
         try{
                 session = client.webSocketSession {
-                    url("ws://192.168.0.5:8085/chatTest")
+                    url("ws://192.168.0.2:8085/chatTest")
                 }
                 Log.d(TAG, "session: $session")
         }catch (timeout: ConnectTimeoutException){
@@ -87,10 +87,11 @@ class ChatKtorClient(
 
     }
 
-    suspend fun sendMessage(chatMessage: ChatMessage){
+    suspend fun sendMessage(chatMessage: ChatMessage, userName: String){
 
         try{
-            session?.send(Frame.Text(Json.encodeToString(ChatMessageMapDecoder("message", chatMessage))))
+            sendMessageToServer(chatMessage, userName)
+
             //aqui ele ja enviou a mensagem com sucesso
             sendNotification(chatMessage)
 
@@ -98,20 +99,27 @@ class ChatKtorClient(
         }catch (sessionCancelled: CancellationException){
             _chatError.emit("There was an error sending the message")
 
-            coroutineScope {
-                withContext(Dispatchers.IO){
-                    restartChatSession(chatMessage.sender, chatMessage)
-                    sendInitialRoomIds(chatMessage.sender)
-                    session?.send(Frame.Text(Json.encodeToString(ChatMessageMapDecoder("message", chatMessage))))
-                    //aqui ele já enviou a mensagem com sucesso
-                    sendNotification(chatMessage)
-                    receiveMessages()
+
+            try {
+                coroutineScope {
+                    withContext(Dispatchers.IO){
+                        restartChatSession(chatMessage.sender, chatMessage)
+                        sendInitialRoomIds(chatMessage.sender)
+                        sendMessageToServer(chatMessage, userName)
+                        //aqui ele já enviou a mensagem com sucesso
+                        sendNotification(chatMessage)
+                        //receiveMessages()
 
 
 
 
+                    }
                 }
+            }catch (e: Exception){
+                Log.d(TAG, e.message.toString() + " at sendMessage")
+
             }
+
 
 
         }catch (e: Exception){
@@ -124,26 +132,39 @@ class ChatKtorClient(
 
     }
 
-    suspend fun receiveMessages(){
-        val incoming = session?.incoming
+    private suspend fun sendMessageToServer(chatMessage: ChatMessage, userName: String) {
+        try {
+            session?.send(Frame.Text(Json.encodeToString(ChatMessageMapDecoder("message", chatMessage, userName))))
 
-        if(incoming != null){
-            try {
-                for(message in incoming){
-                    message as? Frame.Text ?: continue
-                    val jsonMessage = message.readText()
-                    val newChatMessage = Json.decodeFromString<ChatMessage>(jsonMessage)
-                    _messageFlow.emit(newChatMessage)
-                }
-            }catch (cancellation: CancellationException){
-                _chatError.emit("There was an error receiving the messages. The server might be down")
+        }catch (e: Exception){
+            Log.d(TAG, e.message.toString() + " at sendMessageToServer")
 
-                println("Error while receiving: ${cancellation.localizedMessage} at receiveMessages")
-                //session is cancelled and can no longer be used. Session receives null
-                session = null
-
-            }
         }
+
+
+    }
+
+    suspend fun receiveMessages() {
+
+        val incoming = session!!.incoming
+
+        try {
+            for (message in incoming) {
+                message as? Frame.Text ?: continue
+                val jsonMessage = message.readText()
+                val newChatMessage = Json.decodeFromString<ChatMessage>(jsonMessage)
+                Log.d("solvingListBug", "recebi uma nova mensagem la do server websocket $newChatMessage")
+                _messageFlow.emit(newChatMessage)
+            }
+        } catch (cancellation: CancellationException) {
+            Log.d("investigatingChat3", "foi cancelado ${cancellation.message}")
+
+            _chatError.emit("There was an error receiving the messages. The server might be down")
+
+            session = null
+
+        }
+
 
     }
 

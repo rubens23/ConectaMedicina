@@ -1,19 +1,29 @@
 package com.rubens.conectamedicina.ui.reviewAndFeedbackScreen.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -30,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rubens.conectamedicina.data.user.User
+import com.rubens.conectamedicina.data.user.UserPhoto
 import com.rubens.conectamedicina.ui.reviewAndFeedbackScreen.viewModel.ReviewAndFeedbacksViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,7 +48,9 @@ import com.rubens.conectamedicina.ui.reviewAndFeedbackScreen.viewModel.ReviewAnd
 fun ReviewAndFeedbackLayout(viewModel: ReviewAndFeedbacksViewModel,
                             doctorUsername: String,
                             snackbarHostState: SnackbarHostState,
-                            userName: String) {
+                            userName: String,
+                            goBackToDoctorDetails: ()->Unit,
+                            userPhoto: String?) {
 
 
     val showFeedbackBox = remember { mutableStateOf(false) }
@@ -55,90 +68,116 @@ fun ReviewAndFeedbackLayout(viewModel: ReviewAndFeedbacksViewModel,
     }
 
 
-
-    Column(modifier = Modifier.padding(horizontal = 16.dp)
-        .fillMaxHeight(),
-        verticalArrangement = Arrangement.Center) {
-        Text(
-            text = "How would you rate this doctor?",
-            fontWeight = FontWeight.Bold,
-            fontSize = 28.sp,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(Modifier.height(20.dp))
-
-        Row(modifier = Modifier.padding(horizontal = 56.dp)) {
-            Text(
-                text = "Bad",
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Start,
-                fontSize = 22.sp,
-                color = Color.Gray
-            )
-            Text(
-                text = "Great",
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.End,
-                fontSize = 22.sp,
-                color = Color.Gray
-            )
-        }
-
-        Spacer(Modifier.height(20.dp))
-
-        StarRatingSystem(){
-                rating->
-            //clicked on a rating, can show feedback box
-            ratingValue.value = rating
-            showFeedbackBox.value = true
-        }
-
-        Spacer(Modifier.height(40.dp))
-
-        if(showFeedbackBox.value){
-
-            OutlinedTextField(
-                value = feedbackText.value,
-                onValueChange = { feedbackText.value = it },
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = Color(0xFF43C2FF),
-                    cursorColor = Color(0xFF43C2FF)
-                ),
-                placeholder = { Text("Leave a message..") },
-                modifier = Modifier.fillMaxWidth()
-                    .height(200.dp)
-                    .padding(horizontal = 16.dp),
-                maxLines = 5
-
-
-            )
-
-            Spacer(Modifier.height(40.dp))
-
-            Button(
+        Column(modifier = Modifier
+            .padding(start = 20.dp, top = 40.dp, bottom = 40.dp)
+        ){
+            FloatingActionButton(
                 onClick = {
-                    viewModel.saveNewReview(feedbackText = feedbackText.value,
-                        rating = ratingValue.intValue,
-                        doctorUsername = doctorUsername,
-                        name = userName)
-
+                    goBackToDoctorDetails()
                 },
+                shape= CircleShape,
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(Color(0xFF43C2FF))
-            ) {
-
-                Text(
-                    text = "Submit",
-                    modifier = Modifier.padding(vertical = 20.dp),
-                    color = Color.White
+                    .size(48.dp),
+                //.padding(top = 20.dp),
+                backgroundColor = Color(android.graphics.Color.parseColor("#43c2ff"))
+            ){
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "voltar para tela principal",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
                 )
             }
+            Column(modifier = Modifier.padding(horizontal = 16.dp)
+                .fillMaxHeight(),
+                verticalArrangement = Arrangement.Center) {
+                Text(
+                    text = "How would you rate this doctor?",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 28.sp,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
 
+                Spacer(Modifier.height(20.dp))
+
+                Row(modifier = Modifier.padding(horizontal = 56.dp)) {
+                    Text(
+                        text = "Bad",
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Start,
+                        fontSize = 22.sp,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = "Great",
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.End,
+                        fontSize = 22.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                Spacer(Modifier.height(20.dp))
+
+                StarRatingSystem(){
+                        rating->
+                    //clicked on a rating, can show feedback box
+                    ratingValue.value = rating
+                    showFeedbackBox.value = true
+                }
+
+                Spacer(Modifier.height(40.dp))
+
+                if(showFeedbackBox.value){
+
+                    OutlinedTextField(
+                        value = feedbackText.value,
+                        onValueChange = { feedbackText.value = it },
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = Color(0xFF43C2FF),
+                            cursorColor = Color(0xFF43C2FF)
+                        ),
+                        placeholder = { Text("Leave a message..") },
+                        modifier = Modifier.fillMaxWidth()
+                            .height(200.dp)
+                            .padding(horizontal = 16.dp),
+                        maxLines = 5
+
+
+                    )
+
+                    Spacer(Modifier.height(40.dp))
+
+                    Button(
+                        onClick = {
+                            viewModel.saveNewReview(feedbackText = feedbackText.value,
+                                rating = ratingValue.intValue,
+                                doctorUsername = doctorUsername,
+                                name = userName)
+
+                        },
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(Color(0xFF43C2FF))
+                    ) {
+
+                        Text(
+                            text = "Submit",
+                            modifier = Modifier.padding(vertical = 20.dp),
+                            color = Color.White
+                        )
+                    }
+
+                }
+            }
         }
-    }
+
+
+
+
+
+
 
 }

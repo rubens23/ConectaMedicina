@@ -39,7 +39,7 @@ class NotificationDataSourceImpl(
 
             val response = client.get<String>{
                 header(HttpHeaders.Authorization, "Bearer $token")
-                url("http://192.168.0.5:8081/allNotifications")
+                url("http://192.168.0.2:8081/allNotifications")
                 parameter("username", username)
 
 
@@ -62,7 +62,7 @@ class NotificationDataSourceImpl(
         if(token != null){
             client.post<String>{
                 header(HttpHeaders.Authorization, "Bearer $token")
-                url("http://192.168.0.5:8081/markNotificationAsSeen")
+                url("http://192.168.0.2:8081/markNotificationAsSeen")
                 body = notificationId
 
             }

@@ -8,7 +8,7 @@ data class ChatMessage(
     val message: String,
     val timestamp: String,
     val senderType: String,
-    val chatId: String,
+    var chatId: String,
     val receiver: String
 )
 

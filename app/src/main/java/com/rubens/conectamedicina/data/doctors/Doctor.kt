@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class Doctor(
     val username: String,
     val name: String,
-    val profilePicture: String?,
+    val profilePicture: String,
     val specialty: String,
     val aboutDoctor: String,
     val lastName: String,

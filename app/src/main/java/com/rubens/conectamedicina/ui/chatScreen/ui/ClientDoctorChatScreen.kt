@@ -1,5 +1,6 @@
 package com.rubens.conectamedicina.ui.chatScreen.ui
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -7,65 +8,93 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 
 import com.rubens.conectamedicina.R
 import com.rubens.conectamedicina.data.chat.ChatMessage
 import com.rubens.conectamedicina.ui.chatScreen.viewModel.ChatViewModel
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 @Composable
 fun ClientDoctorChatScreenLayout(
     viewModel : ChatViewModel,
     doctorUsername: String,
     userUsername: String,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    userName: String,
+    goBackToDoctorDetails: ()->Unit,
+    doctorPhotoUrl: String,
+    doctorName: String,
+    userPhotoUrl: String
 ){
+
+    Log.d("testingUserName", "o userName do user na tela de chat é $userName")
+
+
+
 
     viewModel.initChatRoom(doctorUsername, userUsername)
     viewModel.getMessagesIfTheyExist(doctorUsername, userUsername)
-
     val chatError by remember { viewModel.chatError }
+    val scrollState = rememberLazyListState()
 
 
 
-    val messagesList = remember { mutableStateOf<ArrayList<ChatMessage>>(ArrayList()) }
+    val messagesList by viewModel.messagesListState.collectAsStateWithLifecycle()
+
+
+
 
     if(chatError != ""){
         LaunchedEffect(Unit){
@@ -76,94 +105,111 @@ fun ClientDoctorChatScreenLayout(
     }
 
 
+    LaunchedEffect(messagesList.size){
+
+        if (messagesList.size > 0){
+            Log.d("solvingListBug", "messagesList: $messagesList")
+            scrollState.scrollToItem(messagesList.size - 1)
+
+        }
+
+    }
 
 
-    LaunchedEffect(Unit){
-        viewModel.messagesResult.collect{
-            //aqui eu recebo um MutableList<ChatMessage>
-            messagesList.value = ArrayList(messagesList.value).apply {
-                addAll(it)
+
+    Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
+
+        ) {
+        paddingValues->
+        Column(modifier = Modifier
+            .padding(paddingValues)){
+
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp, bottom = 10.dp)) {
+                Spacer(Modifier.width(16.dp))
+
+
+
+                FloatingActionButton(
+                    onClick = {
+                        goBackToDoctorDetails()
+                    },
+                    shape= CircleShape,
+                    modifier = Modifier
+                        .size(48.dp),
+                    //.padding(start = 16.dp, top = 40.dp),
+                    backgroundColor = Color(android.graphics.Color.parseColor("#43c2ff"))
+                ){
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "voltar para tela principal",
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                Text(
+                    text = doctorName,
+                    fontSize = 26.sp,
+                    modifier = Modifier.weight(1f)
+                        .padding(start = 10.dp),
+                    color = Color(android.graphics.Color.parseColor("#43c2ff"))
+                )
+
+
             }
+
+
+
+            LazyColumn(modifier = Modifier.weight(1f),
+                reverseLayout = false,
+                state = scrollState) {
+                itemsIndexed(messagesList){
+                        index, message->
+
+
+                    /*
+                    current user não é igual a previous user
+                    Se houver foto pode mostrar
+
+                    doctor pode ter foto e user nao ter ou vice versa
+                     */
+                    val showPhoto = shouldShowPhoto(index, messagesList)
+                    ChatMessageItem(message, viewModel, doctorPhotoUrl, showPhoto, userPhotoUrl)
+                }
+            }
+            MessageInput(viewModel, userUsername, doctorUsername, userName)
+
+
         }
     }
 
-    LaunchedEffect(Unit){
-        viewModel.notificationsResult.collect{
-            chatMessage->
-            //viewModel.saveMessageNotification(chatMessage)
-        }
-    }
 
-
-
-    Column(modifier = Modifier.fillMaxHeight()){
-
-        ChatScreen(messagesList, modifier = Modifier.weight(1f), viewModel)
-        MessageInput(viewModel, userUsername, doctorUsername)
-
-
-    }
 
 
 
 }
 
-@Preview
-@Composable
-fun ChatScreenPreview(){
-//    val messages = listOf(
-//        ChatMessage("rubens@teste", "eu sou o user e essa é a primeira mensagem", "123456789", "user"),
-//        ChatMessage("paulo@teste", "eu sou o doutor e essa é a primeira mensagem", "123456790", "doctor"),
-//        ChatMessage("rubens@teste", "eu sou o user e essa é a segunda mensagem", "123456791", "user"),
-//        ChatMessage("paulo@teste", "eu sou o doutor e essa é a segunda mensagem", "123456792", "doctor"),
-//    )
 
-    Column(modifier = Modifier.fillMaxHeight()) {
-        val messageText = remember { mutableStateOf("") }
-//        TestChatScreen(messages = messages, modifier = Modifier.weight(1f))
-//        MessageInput(messageText){
-//
-//        }
-
-    }
-
-}
 
 @Composable
-fun TestChatScreen(messages: List<ChatMessage>, modifier: Modifier = Modifier){
-    LazyColumn(modifier = modifier) {
-        items(messages){
-            message->
-            //ChatMessageItem(message)
-        }
-    }
-}
-
-@Composable
-fun ChatScreen(
-    messagesList: MutableState<ArrayList<ChatMessage>>,
-    modifier: Modifier = Modifier,
-    viewModel: ChatViewModel
-){
-
-    LazyColumn(modifier = modifier,
-    reverseLayout = false) {
-        items(messagesList.value){
-                message->
-            ChatMessageItem(message, viewModel)
-        }
-    }
-
-}
-
-@Composable
-fun ChatMessageItem(message: ChatMessage,viewModel: ChatViewModel
+fun ChatMessageItem(
+    message: ChatMessage, viewModel: ChatViewModel, doctorPhotoUrl: String, canShowPhoto: Boolean, userPhoto: String
 ) {
+
+
+
+
 
     val configuration = LocalConfiguration.current
 
-    val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
+
+
+
+
 
 
 
@@ -187,6 +233,36 @@ fun ChatMessageItem(message: ChatMessage,viewModel: ChatViewModel
             }
         ) {
 
+            /*
+            com essa logica atual tanto a foto do doc quanto a foto do user podem ser mostradas ao mesmo tempo
+             */
+
+            val showDocPhoto = doctorPhotoUrl != "docHasNoPhoto" && canShowPhoto
+
+            if(showDocPhoto && message.senderType != "user"){
+
+                AsyncImage(
+                    model = doctorPhotoUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(48.dp)
+                        .clip(CircleShape)
+
+
+                )
+
+                Spacer(Modifier.width(10.dp))
+
+
+            }else if(doctorPhotoUrl != "docHasNoPhoto"){
+                Spacer(Modifier.width(48.dp))
+                Spacer(Modifier.width(10.dp))
+            }
+
+
+
+
+
 
             // Display the message in a different color based on senderType
             Box(
@@ -205,8 +281,7 @@ fun ChatMessageItem(message: ChatMessage,viewModel: ChatViewModel
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(8.dp)
                             .weight(weight = 1f,
-                                fill = false)
-                            .background(Color.Green),
+                                fill = false),
                         fontSize = 18.sp,
                         maxLines = 7
                     )
@@ -225,6 +300,29 @@ fun ChatMessageItem(message: ChatMessage,viewModel: ChatViewModel
             }
 
 
+            val showUserPhoto = userPhoto != "userHasNoPhoto" && canShowPhoto
+
+            if(showUserPhoto && message.senderType == "user"){
+                Spacer(Modifier.width(10.dp))
+
+                AsyncImage(
+                    model = userPhoto,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(48.dp)
+                        .clip(CircleShape)
+
+
+                )
+
+            }else if(userPhoto != "userHasNoPhoto"){
+                Spacer(Modifier.width(48.dp))
+                Spacer(Modifier.width(10.dp))
+            }
+
+
+
+
 
         }
 
@@ -232,12 +330,12 @@ fun ChatMessageItem(message: ChatMessage,viewModel: ChatViewModel
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessageInput(
     viewModel: ChatViewModel,
     idCliente: String,
-    doctorId: String
+    doctorId: String,
+    userName: String
 ){
 
     val messageText = remember { mutableStateOf("") }
@@ -292,7 +390,7 @@ fun MessageInput(
                 //sendMessage(messageText.value)
                 // Clear the text field after sending
                 messageText.value = ""
-                viewModel.sendNewChatMessageToServer(chatMessage)
+                viewModel.sendNewChatMessageToServer(chatMessage, userName)
             }
         ) {
             Image(painter = painterResource(R.drawable.baseline_send_24),
@@ -307,4 +405,16 @@ fun MessageInput(
 
 fun sendMessage(message: String) {
     println("Sending message: $message")
+}
+
+fun shouldShowPhoto(index: Int, messagesList: List<ChatMessage>): Boolean {
+    if(index == 0){
+        return true
+    }
+
+    val currentSenderType = messagesList[index].senderType
+    val previousSenderType = messagesList[index - 1].senderType
+
+    return currentSenderType != previousSenderType
+
 }

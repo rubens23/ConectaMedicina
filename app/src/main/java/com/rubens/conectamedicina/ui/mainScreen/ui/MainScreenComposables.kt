@@ -58,13 +58,14 @@ import com.rubens.conectamedicina.data.doctors.Doctor
 import com.rubens.conectamedicina.data.doctors.MedicalCategory
 import com.rubens.conectamedicina.ui.utils.mainBlue
 import com.rubens.conectamedicina.ui.MainViewModel
+import com.rubens.conectamedicina.ui.mainScreen.viewModel.MainScreenViewModel
 import com.rubens.conectamedicina.ui.notificatioScreen.viewModel.NotificationViewModel
 
 
 @Composable
 fun CircularImageWithBackgroundUserProfileImage(
                                                 modifier: Modifier = Modifier,
-                                                viewModel: MainViewModel = hiltViewModel(),
+                                                viewModel: MainScreenViewModel,
                                                 userUsername: String,
                                                 userProfilePicture: String){
     var imageUri = remember { mutableStateOf(if(userProfilePicture.isNotBlank())userProfilePicture.toUri() else null) }

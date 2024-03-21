@@ -10,6 +10,8 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material.Text
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,10 +42,12 @@ fun SignUpScreen(viewModel: AuthenticationViewModel,
     var name by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit){
         viewModel.signUpResult.collect{
                 authResult->
+            loading = false
             when(authResult){
                 is AuthResult.Authorized ->{
                     snackbarHostState.showSnackbar(message = "Your signup was successful! you can login now")
@@ -109,7 +113,9 @@ fun SignUpScreen(viewModel: AuthenticationViewModel,
 
 
         Button(onClick = {
-                         viewModel.onEvent(AuthUiEvent.SignUp)
+            //mostrar uma rodinha de loading
+            loading = true
+            viewModel.onEvent(AuthUiEvent.SignUp)
         },//onClick(typedUsername, typedPassword)},
             modifier =  Modifier
                 .fillMaxWidth()
@@ -126,6 +132,16 @@ fun SignUpScreen(viewModel: AuthenticationViewModel,
         }
             .fillMaxWidth(1f),
             textAlign = TextAlign.Center)
+
+        if (loading){
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(top = 20.dp)
+
+            )
+        }
+
+
 
 
     }

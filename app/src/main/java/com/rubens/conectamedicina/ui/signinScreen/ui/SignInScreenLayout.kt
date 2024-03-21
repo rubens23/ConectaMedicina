@@ -10,8 +10,13 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material.Text
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,12 +34,16 @@ fun SignInScreen(viewModel: AuthenticationViewModel,
                  goToSignUpScreen: ()->Unit,
                  snackbarHostState: SnackbarHostState) {
 
+    var loading by remember { mutableStateOf(false) }
+
+
 
 
 
     LaunchedEffect(Unit){
             viewModel.signInResult.collect{
                     authResult->
+                loading = false
                 when(authResult){
                     is AuthResult.Authorized ->{
                         changeDestinationAfterLogin()
@@ -72,7 +81,8 @@ fun SignInScreen(viewModel: AuthenticationViewModel,
         Spacer(Modifier.padding(top = 20.dp))
 
         Button(onClick = {
-                         viewModel.onEvent(AuthUiEvent.SignIn)
+            loading = true
+            viewModel.onEvent(AuthUiEvent.SignIn)
         },//onClick(typedUsername, typedPassword)},
             modifier = Modifier.fillMaxWidth()
                 .padding(top = 20.dp),
@@ -88,6 +98,14 @@ fun SignInScreen(viewModel: AuthenticationViewModel,
         }
             .fillMaxWidth(1f),
             textAlign = TextAlign.Center)
+
+        if (loading){
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(top = 20.dp)
+
+            )
+        }
 
 
     }

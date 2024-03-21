@@ -20,7 +20,7 @@ interface ApiService {
 
 
     companion object{
-        const val SEND_NOTIFICATION = "http://192.168.0.5:8081/saveMessageNotificationToDoctor"
-        const val CREATE_NOTIFICATION_USER = "http://192.168.0.5:8092/createUser"
+        const val SEND_NOTIFICATION = "http://192.168.0.2:8081/saveMessageNotificationToDoctor"
+        const val CREATE_NOTIFICATION_USER = "http://192.168.0.2:8092/createUser"
     }
 }

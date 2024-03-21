@@ -44,7 +44,7 @@ class UserDataSourceImpl(
         }
     }
 
-    override suspend fun updateUserProfilePicture(storageDto: StorageDto) {
+    override suspend fun updateUserProfilePicture(storageDto: StorageDto, updatedProfileImage: (updated: Boolean)->Unit) {
         val token = prefs.getString("jwt", null)
         if(token != null){
             try{
@@ -52,9 +52,11 @@ class UserDataSourceImpl(
                     "Bearer $token",
                     storageDto
                 )
-                Log.e(TAG, "update feito com sucesso")
+                updatedProfileImage(true)
+                Log.d(TAG, "update feito com sucesso")
 
             }catch (e: Exception){
+                updatedProfileImage(false)
                 Log.e(TAG, "error on updateUserProfilePicture ${e.message}")
 
             }
