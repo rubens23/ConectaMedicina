@@ -29,6 +29,10 @@ English:
 
 <img alt="screenshot" width="30%" src="app/src/main/appscreenshots/Screenshot_1710813491.png"/>
 <img alt="screenshot" width="30%" src="app/src/main/appscreenshots/Screenshot_1710813497.png"/>
+<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/Screenshot_1711466104.png"/>
+<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/Screenshot_1711466210.png"/>
+<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/Screenshot_1711466458.png"/>
+
 
 
 ## How it was made
@@ -46,7 +50,10 @@ This app was made using kotlin and jetpack compose. I used firebase fcm for the 
 - MVVM
 
 
-Português:
+
+
+
+readme em português:
 
 
 ⭐ Este é um projeto para demonstrar minha habilidade em desenvolvimento Android nativo com Kotlin. Mais informações técnicas abaixo.
@@ -62,6 +69,9 @@ Português:
 
 <img alt="screenshot" width="30%" src="app/src/main/appscreenshots/Screenshot_1710813491.png"/>
 <img alt="screenshot" width="30%" src="app/src/main/appscreenshots/Screenshot_1710813497.png"/>
+<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/Screenshot_1711466104.png"/>
+<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/Screenshot_1711466210.png"/>
+<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/Screenshot_1711466458.png"/>
 
 
 ## Como foi feito
@@ -73,6 +83,10 @@ Este aplicativo foi feito usando kotlin e jetpack compose. Usei firebase fcm par
 - kotlin
 - ktor
 - retrofit
+- ktor web sockets
+- firebase fcm
+- dagger hilt
+- MVVM
 - ktor web sockets
 - firebase fcm
 - dagger hilt
