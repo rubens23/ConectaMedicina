@@ -84,7 +84,7 @@ fun ClientDoctorChatScreenLayout(
 
 
 
-    viewModel.initChatRoom(doctorUsername, userUsername)
+    viewModel.initChatRoom(userUsername)
     viewModel.getMessagesIfTheyExist(doctorUsername, userUsername)
     val chatError by remember { viewModel.chatError }
     val scrollState = rememberLazyListState()
@@ -170,12 +170,7 @@ fun ClientDoctorChatScreenLayout(
                         index, message->
 
 
-                    /*
-                    current user não é igual a previous user
-                    Se houver foto pode mostrar
 
-                    doctor pode ter foto e user nao ter ou vice versa
-                     */
                     val showPhoto = shouldShowPhoto(index, messagesList)
                     ChatMessageItem(message, viewModel, doctorPhotoUrl, showPhoto, userPhotoUrl)
                 }

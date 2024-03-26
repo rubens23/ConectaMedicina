@@ -1,7 +1,8 @@
 package com.rubens.conectamedicina.data.chat
 
 import android.util.Log
-import com.rubens.conectamedicina.data.notification.ApiService
+import com.rubens.conectamedicina.data.logging.LogManager
+import com.rubens.conectamedicina.data.notification.PushNotificationManager
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.webSocketSession
 import io.ktor.client.request.url
@@ -21,10 +22,12 @@ import kotlin.coroutines.cancellation.CancellationException
 
 class ChatKtorClient(
     private val client: HttpClient,
-    private val pushNotificationService: ApiService
-) {
+    private val logManager: LogManager,
+    private val pushNotificationManager: PushNotificationManager
+
+    ) {
     private var session: WebSocketSession? = null
-    val TAG = "loggingSession"
+    private val tag = "loggingSession"
 
 
 
@@ -34,7 +37,7 @@ class ChatKtorClient(
     private val _chatError = MutableSharedFlow<String>()
     val chatError get() = _chatError
 
-    suspend fun initChatSession(doctorId: String, userId: String){
+    suspend fun initChatSession(userId: String){
         try{
             session = client.webSocketSession {
                 url("ws://192.168.0.2:8085/chatTest")
@@ -43,25 +46,25 @@ class ChatKtorClient(
             receiveMessages()
         }catch (e: Exception){
             _chatError.emit("There was an error initializing the chat")
-            Log.d(TAG, e.message.toString() + " at initChatSession")
+            logManager.printErrorLogs(tag, e.message.toString() + " at initChatSession")
 
         }
 
     }
 
-    suspend fun restartChatSession(userId: String, chatMessage: ChatMessage){
+    private suspend fun restartChatSession(userId: String, chatMessage: ChatMessage){
 
         try{
                 session = client.webSocketSession {
                     url("ws://192.168.0.2:8085/chatTest")
                 }
-                Log.d(TAG, "session: $session")
+            logManager.printErrorLogs(tag, "session: $session")
         }catch (timeout: ConnectTimeoutException){
-            Log.d(TAG, timeout.message.toString() + " at restartChatSession")
+            logManager.printErrorLogs(tag, timeout.message.toString() + " at restartChatSession")
             _chatError.emit("There was an error connecting to the chat")
 
         }catch (e: Exception){
-            Log.d(TAG, e.message.toString() + " at restartChatSession")
+            logManager.printErrorLogs(tag, e.message.toString() + " at restartChatSession")
             _chatError.emit("There was an error connecting to the chat")
 
 
@@ -77,7 +80,7 @@ class ChatKtorClient(
                 "owner" to owner
             ))))
         }catch (e: Exception){
-            Log.d(TAG, e.message.toString() + " at sendInitialRoomIds")
+            logManager.printErrorLogs(tag, e.message.toString() + " at sendInitialRoomIds")
             _chatError.emit("There was an error connecting to the chat")
 
 
@@ -90,10 +93,10 @@ class ChatKtorClient(
     suspend fun sendMessage(chatMessage: ChatMessage, userName: String){
 
         try{
-            sendMessageToServer(chatMessage, userName)
+            sendNewChatMessage(chatMessage, userName)
 
             //aqui ele ja enviou a mensagem com sucesso
-            sendNotification(chatMessage)
+            pushNotificationManager.sendNotification(chatMessage)
 
 
         }catch (sessionCancelled: CancellationException){
@@ -105,9 +108,9 @@ class ChatKtorClient(
                     withContext(Dispatchers.IO){
                         restartChatSession(chatMessage.sender, chatMessage)
                         sendInitialRoomIds(chatMessage.sender)
-                        sendMessageToServer(chatMessage, userName)
+                        sendNewChatMessage(chatMessage, userName)
                         //aqui ele já enviou a mensagem com sucesso
-                        sendNotification(chatMessage)
+                        pushNotificationManager.sendNotification(chatMessage)
                         //receiveMessages()
 
 
@@ -116,7 +119,7 @@ class ChatKtorClient(
                     }
                 }
             }catch (e: Exception){
-                Log.d(TAG, e.message.toString() + " at sendMessage")
+                logManager.printErrorLogs(tag, e.message.toString() + " at sendMessage")
 
             }
 
@@ -126,25 +129,25 @@ class ChatKtorClient(
             _chatError.emit("There was an error sending the message")
 
 
-            Log.d(TAG, e.message.toString() + " at sendMessage")
+            logManager.printErrorLogs(tag, e.message.toString() + " at sendMessage")
 
         }
 
     }
 
-    private suspend fun sendMessageToServer(chatMessage: ChatMessage, userName: String) {
+    private suspend fun sendNewChatMessage(chatMessage: ChatMessage, userName: String) {
         try {
             session?.send(Frame.Text(Json.encodeToString(ChatMessageMapDecoder("message", chatMessage, userName))))
 
         }catch (e: Exception){
-            Log.d(TAG, e.message.toString() + " at sendMessageToServer")
+            logManager.printErrorLogs(tag, e.message.toString() + " at sendNewChatMessage")
 
         }
 
 
     }
 
-    suspend fun receiveMessages() {
+    private suspend fun receiveMessages() {
 
         val incoming = session!!.incoming
 
@@ -168,11 +171,7 @@ class ChatKtorClient(
 
     }
 
-    suspend fun sendNotification(chatMessage: ChatMessage) {
-            pushNotificationService.saveMessageNotification(title = chatMessage.sender, description = chatMessage.message, chatMessage)
 
-
-    }
 
 
 

@@ -10,7 +10,6 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.url
 import io.ktor.http.HttpHeaders
-import io.ktor.http.headersOf
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -18,9 +17,9 @@ import kotlinx.serialization.json.Json
  * essa api não será mais usada
  * ela será substituida pela solução ktor + fcm
  */
-class ApiServiceImpl(
+class PushNotificationsServiceImpl(
     private val client: HttpClient
-): ApiService {
+): PushNotificationsService {
     private val TAG = "ApiServiceImpl"
     override suspend fun saveMessageNotification(
         title: String,
@@ -32,7 +31,7 @@ class ApiServiceImpl(
         try {
             client.post<String>{
                 header(HttpHeaders.ContentType, "application/json")
-                url(ApiService.SEND_NOTIFICATION)
+                url(PushNotificationsService.SEND_NOTIFICATION)
                 body = Json.encodeToString(NotificationSaveMapDecoder("messageNotification",    NotificationDto(
                     username = chatMessage.receiver,
                     notification = NotificationBody(
@@ -58,7 +57,7 @@ class ApiServiceImpl(
     override suspend fun createUser(userName: String, name: String) {
         try {
             client.get<String>{
-                url(ApiService.CREATE_NOTIFICATION_USER)
+                url(PushNotificationsService.CREATE_NOTIFICATION_USER)
                 parameter("userName", userName)
                 parameter("name", name)
 

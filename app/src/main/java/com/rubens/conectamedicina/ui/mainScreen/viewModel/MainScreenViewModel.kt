@@ -12,7 +12,7 @@ import com.rubens.conectamedicina.data.auth.AuthRepository
 import com.rubens.conectamedicina.data.auth.di.UserAuthRepositoryQualifier
 import com.rubens.conectamedicina.data.doctors.Doctor
 import com.rubens.conectamedicina.data.doctors.DoctorDataSource
-import com.rubens.conectamedicina.data.notification.ApiService
+import com.rubens.conectamedicina.data.notification.PushNotificationsService
 import com.rubens.conectamedicina.data.storage.FileStorage
 import com.rubens.conectamedicina.data.storage.StorageDto
 import com.rubens.conectamedicina.data.user.User
@@ -27,7 +27,7 @@ class MainScreenViewModel @Inject constructor(
     @UserAuthRepositoryQualifier private val userAuthRepository: AuthRepository,
     private val userDataSource: UserDataSource,
     private val doctorDataSource: DoctorDataSource,
-    private val pushNotificationsService: ApiService,
+    private val pushNotificationsService: PushNotificationsService,
     private val fileStorage: FileStorage,
 
 

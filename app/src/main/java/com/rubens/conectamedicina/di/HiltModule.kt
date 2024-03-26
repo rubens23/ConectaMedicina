@@ -3,27 +3,27 @@ package com.rubens.conectamedicina.di
 import android.app.Application
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
-import com.rubens.conectamedicina.data.auth.ClientAuthApi
+import com.rubens.conectamedicina.data.auth.UserAuthApi
 import com.rubens.conectamedicina.data.auth.AuthRepository
-import com.rubens.conectamedicina.data.auth.ClientAuthRepositoryImpl
-import com.rubens.conectamedicina.data.auth.DoctorAuthApi
-import com.rubens.conectamedicina.data.auth.DoctorAuthRepositoryImpl
-import com.rubens.conectamedicina.data.auth.di.DoctorAuthRepositoryQualifier
+import com.rubens.conectamedicina.data.auth.UserAuthRepositoryImpl
 import com.rubens.conectamedicina.data.auth.di.UserAuthRepositoryQualifier
 import com.rubens.conectamedicina.data.appointments.ApiAppointments
 import com.rubens.conectamedicina.data.appointments.AppointmentsDataSourceImpl
 import com.rubens.conectamedicina.data.appointments.AppoitmentsDataSource
+import com.rubens.conectamedicina.data.auth.AuthTokenManager
 import com.rubens.conectamedicina.data.chat.ApiChat
 import com.rubens.conectamedicina.data.chat.ChatDataSource
 import com.rubens.conectamedicina.data.chat.ChatDataSourceImpl
 import com.rubens.conectamedicina.data.doctors.ApiDoctors
 import com.rubens.conectamedicina.data.doctors.DoctorDataSource
 import com.rubens.conectamedicina.data.doctors.DoctorDataSourceImpl
+import com.rubens.conectamedicina.data.logging.LogManager
 import com.rubens.conectamedicina.data.notification.ApiNotifications
-import com.rubens.conectamedicina.data.notification.ApiService
-import com.rubens.conectamedicina.data.notification.ApiServiceImpl
+import com.rubens.conectamedicina.data.notification.PushNotificationsService
+import com.rubens.conectamedicina.data.notification.PushNotificationsServiceImpl
 import com.rubens.conectamedicina.data.notification.NotificationDataSource
 import com.rubens.conectamedicina.data.notification.NotificationDataSourceImpl
+import com.rubens.conectamedicina.data.notification.PushNotificationManager
 import com.rubens.conectamedicina.data.reviews.ApiReviews
 import com.rubens.conectamedicina.data.reviews.ReviewsAndFeedbacksDataSource
 import com.rubens.conectamedicina.data.reviews.ReviewsAndFeedbacksDataSourceImpl
@@ -52,7 +52,7 @@ object HiltModule {
 
     @Provides
     @Singleton
-    fun providesClientAuthApi(): ClientAuthApi {
+    fun providesClientAuthApi(): UserAuthApi {
         return Retrofit.Builder()
             .baseUrl("http://192.168.0.2:8081/")
             .addConverterFactory(MoshiConverterFactory.create())
@@ -62,15 +62,7 @@ object HiltModule {
     }
 
 
-    @Provides
-    @Singleton
-    fun providesDoctorAuthApi(): DoctorAuthApi {
-        return Retrofit.Builder()
-            .baseUrl("http://192.168.0.2:8083/")
-            .addConverterFactory(MoshiConverterFactory.create())
-            .build()
-            .create()
-    }
+
 
     @Provides
     @Singleton
@@ -135,6 +127,8 @@ object HiltModule {
     }
 
 
+
+
     @Provides
     @Singleton
     fun providesNotificationClient(): HttpClient{
@@ -167,6 +161,11 @@ object HiltModule {
 
     @Provides
     @Singleton
+    fun providesLogManager(): LogManager{
+        return LogManager()
+    }
+    @Provides
+    @Singleton
     fun providesDoctorDataSource(apiDoctors: ApiDoctors, preferences: SharedPreferences): DoctorDataSource{
         return DoctorDataSourceImpl(apiDoctors, preferences)
     }
@@ -177,10 +176,16 @@ object HiltModule {
         return ReviewsAndFeedbacksDataSourceImpl(apiReviews, preferences)
     }
 
+    @Singleton
+    @Provides
+    fun providesAuthTokenManager(prefs: SharedPreferences): AuthTokenManager{
+        return AuthTokenManager(prefs)
+    }
+
     @Provides
     @Singleton
-    fun providesAppointmentDataSource(apiAppointments: ApiAppointments, preferences: SharedPreferences): AppoitmentsDataSource {
-        return AppointmentsDataSourceImpl(apiAppointments, preferences)
+    fun providesAppointmentDataSource(apiAppointments: ApiAppointments, authTokenManager: AuthTokenManager): AppoitmentsDataSource {
+        return AppointmentsDataSourceImpl(apiAppointments, authTokenManager)
     }
 
 
@@ -192,8 +197,8 @@ object HiltModule {
 
     @Provides
     @Singleton
-    fun providesChatDataSource(apiChat: ApiChat, preferences: SharedPreferences): ChatDataSource{
-        return ChatDataSourceImpl(apiChat, preferences)
+    fun providesChatDataSource(apiChat: ApiChat, authTokenManager: AuthTokenManager, logManager: LogManager): ChatDataSource{
+        return ChatDataSourceImpl(apiChat, authTokenManager, logManager)
     }
 
     @Provides
@@ -202,29 +207,32 @@ object HiltModule {
         return NotificationDataSourceImpl(apiNotifications, preferences, httpClient)
     }
 
+
+
     @Provides
     @Singleton
     @UserAuthRepositoryQualifier
-    fun providesClientAuthRepository(api: ClientAuthApi, sharedPreferences: SharedPreferences): AuthRepository {
-        return ClientAuthRepositoryImpl(api,
-        sharedPreferences)
+    fun providesClientAuthRepository(api: UserAuthApi, logManager: LogManager, authTokenManager: AuthTokenManager): AuthRepository {
+        return UserAuthRepositoryImpl(api,
+        authTokenManager, logManager)
     }
 
-    @Provides
-    @Singleton
-    @DoctorAuthRepositoryQualifier
-    fun providesDoctorAuthRepository(api: DoctorAuthApi, sharedPreferences: SharedPreferences): AuthRepository {
-        return DoctorAuthRepositoryImpl(api, sharedPreferences)
-    }
+
 
 
 
     @Provides
     @Singleton
-    fun providesApiServiceImpl(client: HttpClient): ApiService{
-        return ApiServiceImpl(client)
+    fun providesApiServiceImpl(client: HttpClient): PushNotificationsService{
+        return PushNotificationsServiceImpl(client)
     }
 
+    @Provides
+    @Singleton
+    fun providesPushNotificationManager(pushNotificationsService: PushNotificationsService): PushNotificationManager{
+        return PushNotificationManager(pushNotificationsService)
+
+    }
 
 
 }

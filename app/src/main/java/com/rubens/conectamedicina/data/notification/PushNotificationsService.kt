@@ -6,7 +6,7 @@ import com.rubens.conectamedicina.data.chat.ChatMessage
  * essa api não será mais usada
  * ela será substituida pela solução ktor + fcm
  */
-interface ApiService {
+interface PushNotificationsService {
 
     suspend fun saveMessageNotification(
         title: String,

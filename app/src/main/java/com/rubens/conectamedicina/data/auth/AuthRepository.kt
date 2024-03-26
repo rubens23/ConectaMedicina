@@ -1,6 +1,5 @@
 package com.rubens.conectamedicina.data.auth
 
-import com.rubens.conectamedicina.data.models.MongoDbConnection
 
 interface AuthRepository {
     suspend fun signUp(
@@ -12,5 +11,5 @@ interface AuthRepository {
 
     suspend fun signIn(username: String, password: String): AuthResult<Unit>
     suspend fun authenticate(): AuthResult<Unit>
-    suspend fun getUserSecret(): String? = ""
+    suspend fun getUserSecret(): String? = null
 }

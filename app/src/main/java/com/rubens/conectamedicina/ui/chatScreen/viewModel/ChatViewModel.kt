@@ -7,7 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.rubens.conectamedicina.data.chat.ChatDataSource
 import com.rubens.conectamedicina.data.chat.ChatKtorClient
 import com.rubens.conectamedicina.data.chat.ChatMessage
-import com.rubens.conectamedicina.data.notification.ApiService
+import com.rubens.conectamedicina.data.logging.LogManager
+import com.rubens.conectamedicina.data.notification.PushNotificationManager
+import com.rubens.conectamedicina.data.notification.PushNotificationsService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -23,14 +25,16 @@ import javax.inject.Inject
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val chatDataSource: ChatDataSource,
-    private val pushNotificationService: ApiService
+    private val logManager: LogManager,
+    private val pushNotificationManager: PushNotificationManager
 ): ViewModel() {
     private val client: ChatKtorClient = ChatKtorClient(
         HttpClient(CIO){
             install(Logging)
             install(WebSockets)
         },
-        pushNotificationService
+        logManager,
+        pushNotificationManager
     )
 
 
@@ -69,13 +73,11 @@ class ChatViewModel @Inject constructor(
 
                 client.messageFlow.collect{
 
-                    Log.d("solvingListBug", "lista de mensagens antes de coletar uma nova mensagem ${messagesListState.value}")
 
                     _messagesListState.value = messagesListState.value.toMutableList().apply {
                         add(it)
                     }
 
-                    Log.d("solvingListBug", "lista de mensagens DEPOIS de coletar uma nova mensagem ${messagesListState.value}")
 
 
 
@@ -96,10 +98,10 @@ class ChatViewModel @Inject constructor(
 
     }
 
-    fun initChatRoom(idDoutor: String, idUser: String){
+    fun initChatRoom(idUser: String){
         viewModelScope.launch {
             if(!initiatedChat){
-                client.initChatSession(idDoutor,idUser)
+                client.initChatSession(idUser)
                 initiatedChat = true
 
             }

@@ -1,19 +1,19 @@
 package com.rubens.conectamedicina.data.chat
 
-import android.content.SharedPreferences
-import android.util.Log
+import com.rubens.conectamedicina.data.auth.AuthTokenManager
+import com.rubens.conectamedicina.data.logging.LogManager
 
 class ChatDataSourceImpl(private val apiChat: ApiChat,
-                         private val preferences: SharedPreferences): ChatDataSource {
+                         private val authTokenManager: AuthTokenManager,
+    private val logManager: LogManager): ChatDataSource {
 
    val tag = "ChatDataSourceImpl"
     override suspend fun getChatMessages(idDoctor: String, idUser: String): ChatRoom? {
         return try {
-            val token = preferences.getString("jwt", null)?: return null
-            val result = apiChat.getChatById("Bearer $token", idUser, idDoctor)
-            result
+            val token = authTokenManager.getToken()?: return null
+            apiChat.getChatById("Bearer $token", idUser, idDoctor)
         }catch (e: Exception){
-            Log.e(tag, "error on getChatMessages ${e.message}")
+            logManager.printErrorLogs(tag, "error on getChatMessages ${e.message}")
             null
         }
 
