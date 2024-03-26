@@ -23,15 +23,9 @@ English:
 <p float="left" align="center">
 
 
-<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/1-portrait.png"/>
-<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/2-portrait.png"/>
-<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/3-portrait.png"/>
-<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/4-portrait.png"/>
-<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/5-portrait.png"/>
-<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/6-portrait.png"/>
-<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/7-portrait.png"/>
-<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/8-portrait.png"/>
-<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/9-portrait.png"/>
+<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/Screenshot_1710813491.png"/>
+<img alt="screenshot" width="30%" src="app/src/main/appscreenshots/Screenshot_1710813497.png"/>
+
 
 ## How it was made
 
